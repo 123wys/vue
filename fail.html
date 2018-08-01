@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>店铺授权失败</title>
+    <style>
+        body, h1, h2, p, ul {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            font-family: "PingFang SC";
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        img {
+            width: 160px;
+            height: 160px;
+            padding-bottom: 30px;
+        }
+
+        .contents {
+            width: 100%;
+            min-width: 1200px;
+        }
+
+        .authorized-fail {
+            width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .authorized-fail h1 {
+            color: #324057;
+            font-size: 24px;
+            font-weight: normal;
+            padding: 100px 0 30px 0;
+        }
+
+        .authorized-fail .line {
+            width: 515px;
+            height: 1px;
+            background-color: #C0CCDA;
+            margin: 0 auto;
+        }
+
+        .reason {
+            text-align: left;
+            padding-left: 420px;
+        }
+
+        .reason h2 {
+            font-size: 12px;
+            font-weight: normal;
+            padding: 20px 0 10px 0;
+        }
+
+        .reason ul li {
+            color: #66728c;
+            font-size: 12px;
+            padding-bottom: 2px;
+        }
+
+        .reason p {
+            padding: 10px 0 50px 0;
+            color: #66728c;
+            font-size: 12px;
+        }
+
+        .authorized-fail a.closed {
+            display: inline-block;
+            height: 38px;
+            line-height: 38px;
+            width: 80px;
+            text-align: center;
+            border: 1px solid #C0CCDA;
+            color: #302057;
+            font-size: 14px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="contents">
+    <div class="authorized-fail">
+        <h1>店铺授权失败<br><span style="font-size: 16px;color: red;">失败原因:<span id="errMsg"></span></span></h1>
+        <img src="http://img.xiaoyatong.com/shopAuthorization/failed.jpg" alt="">
+        <div class="line"></div>
+        <div class="reason">
+            <h2>可能失败的原因：</h2>
+            <ul>
+                <li>1.如果是淘宝天猫店铺，可能未在服务市场订购“小亚通”<a
+                        href="https://fuwu.taobao.com/ser/detail.htm?spm=a1z13.8114210.1234-fwlb.4.4JmNzy&service_code=FW_GOODS-1000357588&tracelog=search&from_key=小亚通">去订购></a>
+                </li>
+                <li>2.该店铺已被授权</li>
+            </ul>
+            <p>您也可以回到“小亚通“联系客服</p>
+        </div>
+        <a href="javascript:window.opener=null;window.open('','_self');window.close();" class="closed">关闭页面</a>
+    </div>
+</div>
+<script>
+function getUrlParam(name){
+    // var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) {
+        return decodeURI(r[2]);
+    }
+    return null;
+}
+var mycont = getUrlParam('errMsg');
+if (mycont != null && mycont.toString().length>1) {
+    document.getElementById("errMsg").innerHTML = mycont;
+}
+</script>
+</body>
+</html>

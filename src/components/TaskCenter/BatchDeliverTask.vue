@@ -1,0 +1,166 @@
+<template>
+  <div class="batch-deliver-task" v-loading="loading">
+    <div class="search">
+      <span>操作日期</span>
+      <el-date-picker type="daterange" size="small" v-model="dateRange" :picker-options="pickerOptions" placeholder="选择日期范围">
+      </el-date-picker>
+      <el-button type="primary" size="small" class="search-btn" @click="searchHandler">搜索</el-button>
+    </div>
+    <el-table :data="taskData.beanList" style="width: 100%" v-loading="loading" element-loading-text="拼命加载中">
+      <el-table-column prop="uploadFile" label="文件名称" :show-overflow-tooltip="true" min-width="180">
+      </el-table-column>
+      <el-table-column prop="createTime" label="操作时间" min-width="100">
+      </el-table-column>
+      <el-table-column prop="opId" label="操作员" min-width="70">
+        <template scope="scope">
+          <span v-text="opLabel(scope.row.createOp)"></span>
+        </template>
+      </el-table-column>
+      <el-table-column label="处理状态" min-width="50">
+        <template scope="scope">
+          <el-tag :type="statusType(scope.row.jobStatus)" v-text="statusLabel(scope.row.jobStatus)"></el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="jobMemo" label="状态信息" :show-overflow-tooltip="true" min-width="200">
+      </el-table-column>
+      <searchNull slot="empty"></searchNull>
+    </el-table>
+    <div class="foot">
+      <el-pagination @size-change="sizeChangeHandler" @current-change="currentChangeHandler" :current-page="pageNumber" :page-sizes="[10, 20, 50]" :page-size="pageSize" :total="taskData.amount" layout="total, sizes, prev, pager, next, jumper">
+      </el-pagination>
+    </div>
+  </div>
+</template>
+<script>
+import axios from 'axios';
+// import debounce from 'lodash/debounce'
+import dateFormat from 'dateFormat';
+const queryAsyncJobsUrl = '/order/order/queryAsyncJobs';
+export default {
+  name: 'batch-deliver-task',
+  data() {
+    let aMonthAgo = new Date();
+    aMonthAgo.setMonth(new Date().getMonth() - 1, new Date().getDate() + 1)
+    return {
+      dateRange: [aMonthAgo, new Date()],
+      pageSize: 10,
+      pageNumber: 1,
+      pickerOptions: {
+        disabledDate: (time) => {
+          return time.getTime() > Date.now();
+        },
+      },
+      loading: false,
+      taskData: {
+        amount: 0,
+        beanList: [],
+      },
+      interval: '',
+    }
+  },
+  computed: {
+    jobStatus() {
+      return this.$store.state.enumSet.jobStatus
+    },
+    operatorEnum() {
+      return this.$store.state.enumSet.operatorEnum;
+    },
+    needPolling() {
+      return this.taskData.beanList.some(n => n.jobStatus <= 1);
+    },
+  },
+  methods: {
+    searchHandler() {
+      let query = {
+        queryCondition: {
+          jobType: 2,
+        },
+        pageSize: this.pageSize,
+        pageNumber: this.pageNumber,
+      };
+      if (this.dateRange && this.dateRange[0] && this.dateRange[1]) {
+        query.queryCondition.beginCreateTime = dateFormat(this.dateRange[0], 'yyyy-mm-dd HH:MM:ss');
+        query.queryCondition.endCreteTime = dateFormat(this.dateRange[1], 'yyyy-mm-dd') + ' 23:59:59';
+      }
+      this.loading = true;
+      axios.post(queryAsyncJobsUrl, query).then(({data}) => {
+        this.taskData = data;
+        this.loading = false;
+        if (this.needPolling) {
+          if (this.interval) return;
+          this.interval = window.setInterval(() => {
+            this.searchHandler();
+          }, 1000 * 10);
+        } else {
+          window.clearInterval(this.interval);
+        }
+      }).catch(err => {
+        this.loading = false;
+        this.$msgbox({
+          title: '提示',
+          message: '查询失败，' + (err.response ? err.response.data : err),
+          type: 'error',
+        });
+      })
+    },
+    sizeChangeHandler(size) {
+      this.pageSize = size;
+      this.searchHandler();
+    },
+    currentChangeHandler(number) {
+      this.pageNumber = number;
+      this.searchHandler();
+    },
+    statusLabel(status) {
+      return this.jobStatus[parseInt(status)].label;
+    },
+    statusType(status) {
+      return this.jobStatus[parseInt(status)].type;
+    },
+    opLabel(opId) {
+      return this.operatorEnum[opId] || opId;
+    },
+  },
+  activated() {
+    this.searchHandler();
+  },
+  deactivated() {
+    window.clearInterval(this.interval);
+  },
+}
+</script>
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style lang='less' scoped>
+@import '../../main.less';
+.search {
+  margin-bottom: @baseSpace * 3;
+  > * {
+    margin-right: @baseSpace * 2;
+  }
+  .search-btn {
+    width: @baseSpace * 12;
+    border-radius: 0;
+  }
+}
+
+.tt {
+  padding-left: @baseSpace*3;
+}
+
+.oneline {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.el-table {
+  margin-bottom: @baseSpace * 3;
+}
+
+.foot {
+  text-align: end;
+}
+
+.iconfont {
+  margin-right: @baseSpace;
+}
+</style>
